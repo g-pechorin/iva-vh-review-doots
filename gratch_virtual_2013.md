@@ -50,10 +50,11 @@ processing, perception, and nonverbal behavior generation
 - what did they need to do this
 
 
+## gratch_creating_2002
 
 > Gratch, J., Rickel, J., André, E., Cassell, J., Petajan, E., &
 > Badler, N. (2002). Creating Interactive Virtual Humans:
 > Some Assembly Required. IEEE Intelligent Systems,
 > July/August, 54-61.
 
-- just all odf it
+- just all of it

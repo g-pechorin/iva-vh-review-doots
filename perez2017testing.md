@@ -8,3 +8,13 @@
 	- i'm unfamiliar with lienear temporal logic
 - the separation allows transfering event traces from/to other computers and replaying them
 	- this is then demonstraed with an extended version of the framework
+	- advocay for temproarl logic might be worth exploring once any challenges are seen
+
+
+
+
+
+
+
+
+

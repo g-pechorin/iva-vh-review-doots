@@ -1,0 +1,100 @@
+
+
+% re-state the points
+
+
+[trandtional PFP and guidleines would be one way]
+    [it could also be done as a non-PFP approach following these]
+    [this would be the case of trusting that the entire team is keeping track of details correctly]
+    [this is not quite practical - even if Turing completeness tells us it's possible]
+    [too much can go wrong - want "pure" whole-system or as close as we can get to that]
+
+
+gratch_creating_2002
+- advocates for resuable tools and modular architectures, BUT
+- consistency and timing are a PITA
+	- our approach should help with consistency ... i think ... becuase the FRP methods enforce "lockstep" progression
+	- the explicit passing of time values should also be helpful
+
+
+[FRP offers a way to encode a system, with full IOs, which behaves in a predictable manner]
+    [frp approach is "pfp but at a system level"]
+    [frp does it as big graph.]
+    [each cycle of simulation updates the graph]
+
+- Functional Reactive Programming (FRP) is an approach to PFP that models entities as "signal functions" (SF) which consume some *event* and emit some *signal*.\footnotemark
+    \footnotetext{I'm adopting the nomenclature mapping *event* and *signal* to the input and output from Signal Functions - others may use the terms in different ways.}
+- [This abstraction will be used as a consistent approach to connecting the various components we need for an Interactive Artificial Intelligence.]
+- [The Functional Reactive Programming approach chosen builds on the advantages of PFP by specifying when inputs are collected, which inputs those are and what outputs are sent to the agent sends to the components.]
+
+- [The implementation will be built from a central "shell" responsible for generating PFP code to interface between the agent and any components.]
+    - [For deployment purposes; it's likely that some method of "freezing" these interfaces will be used - the motivation is automating the step of "updating" something like this when a binding changes.]
+
+% describe isolation of bindings
+
+
+[components aren't written in FRP, write a binding to expose their functionality as FRP]
+    [some "glue" would be required in any system]
+    [these "glue" can be isolated from eachother]
+        [a component in my solution exposes an API that the agent works against]
+        [similar components could depend upon shared types and expose identical APIs to allow interchange]
+        [components copuld also offer simmilar interfaces to allow adaptation]
+
+
+- [Components are bound using some amount of "glue" code to isolate them from each other; limiting the implementation to *just* focus on one aspect at a time.]
+
+
+do/show code of
+
+% describe scenarios
+
+[only agent is written in PFP]
+    [Pareto Principle; 20\% of the population will control 80\% of the wealth]
+        % i'm taking it as a given that the agents will have the bugs
+    [???]
+    [hopefully the parts we're used to changing are the culprits]
+
+- [The agents themselves will be written in perfectly normal Idris\footnote{... or PureScript, I'm trying to migrate the agent lagnuage for technical reasons.} and compiled to a `.js` blob which can be loaded into the Java11/GraalVM's interpreter.]
+    - [The use of the two "Java" platforms tends to mislead people - the goal isn't to develop a new way to run JavaScript, and the Java Virtual Machine was chosen due to the build tools making testing simple.]
+
+
+% describe execution
+
+[pass data back/forth in strict cycles]
+    [mostly because we can, but, also makes life simpler]
+    [strict rules are placed on how the bindings can act and react]
+        [one in one out]
+    [this should limit the amount of "stuff" that can go wrong ... right]
+        [drivers can still ignore errors - but now the error is in one known place]
+    [each driver components can/is isolated; making their lives easier]
+[needs can be detected - limit IO between agent and shell to juist these cycles]
+    [opening an io is "only allowed at the start" as it has a "side effect"]
+    [smaller input pairs for the scenarios]
+        [actually - a driver's IO can be recorded and replayed on its own]
+    [nothing to prevent re-running events and testing scenarios]
+    [nothing to prevent re-running events and testing component]
+
+    - [On launch, the agent must "open" each input that it wishes to read from and each output it will provide.]
+        - [If the available components have changed (since the agent was written) - this will produce an immediate error on startup, rather than at a later date.]
+
+
+
+% detail why this solves the problem
+
+- [The approach here isn't focussed on building "master APIs" for the lines of communication between components, but, rather a system to automatically generate and check the interconnections between those components.]
+	- [The intent is to support flexible working; incompatible interface changes should cause type errors, and aberrant states can be reproduced and analysed.]
+- [Agents Scenarios are not reliant upon an external encoding or communications system, nor can they easily buildup state that'll introduce aberrant behaviour - they stay "fresh" in a "just turned on" state.]
+
+- [The shell we propose enforces consistent input and output operations from the agent.]
+    - [If the agent fails to specify or read a value for something there will be an immediate error; enforcing consistent behaviour.]
+- [These aspects are currently "enforced" by our implementation, prior work has identified a method to enforce it as a compile-time constraint.\cite{winograd2012wormholes}]
+
+- [Additionally the strict delineations between "agent" and "shell" afford additional options for testing and diagnosis.]
+    - [A "built-in" strict separation isn't required for "good" testing, but, it's helpful and considered a good practice anyway.]
+- [The proposed component integration decouples them from the simulation - making "headless running" of the bound components "practical" compared to a more "tight" integration.]
+    - [Nothing stops component developers from doing this on their own, but, this enforces a consistent structure so that one might be able to test them similarly.]
+- [Finally, as noted elsewhere, abstracting the FFI into and out of the agent as streams of data means that the agent (or components) can be tested against previous sessions, and, re-played to re-reach a previous state.]
+    - [Again; due to Turning Completeness - any system could do this with enough work, but, this approach "supports" it.]
+
+- [Prior work has shown both that FRP approaches are quite suited to testing\cite{perez2017testing} and that automated testing of PFP itself can be quite useful in determining "edge cases"\cite{claessen2011quickcheck} which would otherwise be a challenge to diagnose.]
+	- [The ability to abstract and encode all invocations coming in and out of the system as distinct data points are key to this.]

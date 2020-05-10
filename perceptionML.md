@@ -1,4 +1,16 @@
 
+- Perception Markup Language was\cite{sauce:perceptionML} proposed to allow simpler mixing of components
+	- demonstrates desirablity of improved component tooling
+	- more standard connections, easier to add and remove components
+- builds a standard langugead for compoents to communicate
+	- doesn't specify how the compobents behave, just how they structure their speech
+- protocols don't exist/enforced just a message data type
+	- Joachim Parrow proovides "An Introduction to the pi-Calculus" in \cite{bergstra2001handbook} which describes "protocol calculus" some way to do this
+- this standardisation allows componetns to exchange information in an agreed way
+- seek to build on this concept, if not this implementation
+	- would like to explore using XML schema to generate interfaces, but, we use PFP langauge constructs as type checked equivalent
+	- PFP is checked at compile time, though, it's inevitably limited to the language in question
+	- our approach doesn't have a way to embed the transformational cocept from protocol calculus
 
 
 @inproceedings{
@@ -13,6 +25,10 @@
 		year = {2012},
 		keywords = {Virtual Humans}
 	}
+
+
+
+
 
 XML is text
 

@@ -1,0 +1,50 @@
+
+\section{Problem Statement}
+
+\label{whatsWrongWithIt}
+
+% here's the outline; each block should be one sentence
+As discussed in the previous sections, the work required to construct IAI systems we've seen isn't impractical.
+Reducing or automating the work required to connect components would be beneficial - this is hindered by the specific domain in which we've seen IAI development carried out.
+  Software components will be prepared with a diverse range of approaches, platforms, languages and environments.
+    It should go without saying that the process of embedding or binding a component into the system shouldn't be a barrier when choosing components.
+    To debug and correct problems it's essential to be able to decompose the system and remove components, without introducing "silent failures."
+    % so - straight "write like this" isn't an option
+    % this point feels a *bit* unimportant to the IAI community, but, seems like something that should be clarified for the PFP audience; i.e. we need to integrate the systems - can't "*just* write it correctly/in-Haskell"
+  The development of such a system will involve continual updates to the subsystems that form components for the IAI.
+    % can't treat systems as "buttoned-down" because ...
+    Newer hardware may become available, machine learning models are tuned, bugs are fixed and component behaviours change throughout the project.
+    Continuous refinement and adjustment are unavoidable, so, one can't always rely on things being "buttoned-down" once they've been observed functioning.
+    Put more simply; constraints which aren't enforced by some manner of checks are likely to be violated.
+    A function call that was expected to always pass whole numbers may begin using floating-point values as the timestamp it is based upon is made more accurate.
+  % I'm "merging" the "large IO" and "hard to automate" blurbs
+  The input and output pairs for a fully realised IAI is large and difficult to test automatically.
+    Typically the input to such a system would be the audio and video recordings of a session.
+    The outputs from an IAI session, at least in the case of a Virtual Human, would be (at the least) a similar audio-video stream.
+    This interaction is formed by a user providing input to the system, which produces some output, which the user reacts to and produces new input to the system.
+    Validating the outputs of the system (without decomposing it) would require some mechanism for comparing the outputs, which would likely be a human operator making regression testing prohibitive.
+    Finally, the systems we've seen include "hidden inputs"\footnotemark in encapsulated modules which provide variations that aren't accounted for.
+    Time is treated as an implicit input to the simulation and components, so, it's not explicitly accounted for in the system's behaviour.
+\footnotetext {
+  Pure Functional Programming might call these "side effects."
+  In this case, we're considering system calls to ask for a random number or read the system clock.
+}
+
+    % - how about; can't *just* feed recorded video to the system since the feedback between the agent and the user would change and capturing that is essential
+    % message queues don't "force" components to cycle; it's async
+    % FRP means that the operations have to happen
+    % need systems that REACT rather than do it in their own time at unpredictable rates
+    % should I mention something about the fact we don't know when/how the messages will arrive?
+
+In general, these types of issues are reminiscent of the sort of issues resolved with "Inversion of Control" and "Dependency Injection" approaches.\cite{fowler2004inversion}
+  This states that a higher-level "policy" module shouldn't rely on a lower-level "mechanism" component; execution of logic shouldn't be tied to modifying specific files on disk.
+
+Large systems typically encounter this class of problem, IAI systems face different challenges in resolving them.
+    IAI systems use "interaction" with human operators as a component in the system.
+        The system responds to the user, and the user responds to the system - this is a continual loop which is difficult to automate.
+    The sensing systems typically used are imperfect.
+        Lighting conditions can be different depending upon the user's posture or the time of day - making it difficult to analyse or even detect the user's face.
+        Subtle variations in accents can make specific words consistently indecipherable - necessitating adjustments to the system or instructions to allow use to be carried out.
+    The combined result of these factors leads to a system that might have the intended effect, or, it might not.
+        We're advocating for a development method or architecture that allows continual adjustment and refinement while minimising potential uncertainty and risks.
+        The theory is that the safeties of PFP will allow developers to rely on the computer validating their work as we make unplanned adjustments to correct unanticipated behaviours.

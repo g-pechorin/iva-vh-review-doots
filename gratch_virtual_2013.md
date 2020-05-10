@@ -1,4 +1,19 @@
 
+
+A 2013 witjkshop tutorial\cite{gratch_virtual_2013} identifided virtual humans as exisitng in a virtual world while interacting with real one
+	[potetnial uses to replicate human behaviour or even just study it]
+[- making use of them for resarch requires integrating tools and sofreaw features from mayy sources]
+[- essential feature of this is coordinating the system and ensureing that the ensuing simpualtion proceeds]
+	[- need an approach that managaes time in explicit eays]
+
+
+
+The following year held a confrence
+virtual humans existing 
+
+
+
+
 # summary
 
 cognitive scince tutorial from 2013

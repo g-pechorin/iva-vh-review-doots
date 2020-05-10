@@ -1,6 +1,7 @@
+\cite{gratch_creating_2002}
 
 
-# summary
+# summary - of 
 
 
 
@@ -102,3 +103,4 @@ YES!
 - consistency and timing are a PITA
 	- our approach should help with consistency ... i think ... becuase the FRP methods enforce "lockstep" progression
 	- the explicit passing of time values should also be helpful
+

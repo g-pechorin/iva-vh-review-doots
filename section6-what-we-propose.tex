@@ -40,18 +40,18 @@ It is assumed that components won't be written in FRP, and will need some amount
 Each component should have some amount of "glue" code to expose available functionality to the system - which we refer to as the "binding."
 
 We've found that message types can be extracted from compiled Scala classes using the JVM's runtime reflection.
-    With this approach, the Scala defintions become the "master description" of how data will be passed in and out by the binding.
-        Specifying these structures in the bindings, then generating the "headers" for the agent seemed like logical method to carry out this step.
-        If relying on reflection is undesireable or otherwise incvonvient; one could use some manner of Interface Defintion Language to generate "both sides" od the data structures from one master description.
-To pass data between components, and finally prepare the output - we used Scala's (for-yield, a) varation of "do-notation" to create a monad that can be invoked as needed to check for an event or receive a signal.
+    With this approach, the Scala definitions become the "master description" of how data will be passed in and out by the binding.
+        Specifying these structures in the bindings, then generating the "headers" for the agent seemed like a logical method to carry out this step.
+        If relying on reflection is undesirable or otherwise inconvenient; one could use some manner of Interface Definition Language to generate "both sides" od the data structures from one master description.
+To pass data between components, and finally prepare the output - we used Scala's (for-yield, a) variation of "do-notation" to create a monad that can be invoked as needed to check for an event or receive a signal.
     \footnotetext{
         A very informal explanation of the Haskell do-notation syntax can be found here \url{http://learnyouahaskell.com/a-fistful-of-monads}.
     }
-    Interestingly this allowed us to express parameters and dependencies between the components in a concise way.
+    Interestingly this allowed us to express parameters and dependencies between the components concisely.
     Listing \ref{lst:depa} illustrates a contrived example of this mechanism.
-Each binding will be a singleton instantiated durring shell creation.
+Each binding will be a singleton instantiated during shell creation.
     Each binding will be analysed (via reflection) to generate a functional "header" used to perform the actual invocations of functions on the instance.
-    Any functionality desired by the agent is accessed through a "Foriegn Signal Function" which acts as a sort of "handle" to the aforementioned monad.
+    Any functionality desired by the agent is accessed through a "Foreign Signal Function" which acts as a sort of "handle" to the aforementioned monad.
     When the shell wishes to start a new loop or "cycle" is will "solve" all of these Monads to create and plugin whatever data they need to work and input they wish to send into the agent's simulation.
 
 \begin{lstlisting}[caption={Scala for-yield to interact with the agent}, label={lst:depa},basicstyle=\small,language=Scala]

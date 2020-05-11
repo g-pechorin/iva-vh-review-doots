@@ -2,63 +2,122 @@
 
 % re-state the points
 
+\section{Proposed Approach}
 
-[trandtional PFP and guidleines would be one way]
-    [it could also be done as a non-PFP approach following these]
-    [this would be the case of trusting that the entire team is keeping track of details correctly]
-    [this is not quite practical - even if Turing completeness tells us it's possible]
-    [too much can go wrong - want "pure" whole-system or as close as we can get to that]
+Implementing a full Interactive Artificial Intelligence (IAI) system with Pure Functional Programming (PFP) would be one, admitedly unfeasable approach to this.
+    Simply writing the system in a PFP method wouldn't prevent the issues identified from being present. 
+        In effect, this approach would be trusting that the same mistakes won't be made again, and, that the development team will be able to track all deatils of their work correctly this time.
+    While the concept of Turing Completeness\footnotemark would argue that it's possible to do what we describe in any language, our argument is that with a PFP the task is simpler to finish as the implementation is checked by the language to an extent that it wouldn't be in an impoure lagnuage.
+    \footnotetext{
+        "Turing-Completeness" here reffers to the notion that any program expressed in a "Turing-Complete" language can be mechanically translated or emulated in any other Turing-Complete language.
+    }
+    Functional Purity allows us to reuse logic without the need to consider unseen side effects, and our goal is to use an approach that is, as described in\cite{perez2017testing} "functional purity at the system level."
 
+In 2002 Gratch and others identified the need to develop reusable tools and modular architectures for the development of IAI.\cite{gratch_creating_2002}
+They also identified that consistency and timing between separate modules as an issue that needs to be managed.
+    While we cannot "enforce" handling of either of these, our appraoch should assist in handling concerns involved.
+        We can't force a compoent to attach the same timestamps that we do, but, we can provide a sort fo "marhsalling area" where the data from the compoent (including timestamps) is processed and passed into the system.
+    By explicit handling how the data is "marshalled" before being passed into the simulation, or along to other bindings, we hope to make the process more concistent.
 
-gratch_creating_2002
-- advocates for resuable tools and modular architectures, BUT
-- consistency and timing are a PITA
-	- our approach should help with consistency ... i think ... becuase the FRP methods enforce "lockstep" progression
-	- the explicit passing of time values should also be helpful
-
-
-[FRP offers a way to encode a system, with full IOs, which behaves in a predictable manner]
-    [frp approach is "pfp but at a system level"]
-    [frp does it as big graph.]
-    [each cycle of simulation updates the graph]
-
-- Functional Reactive Programming (FRP) is an approach to PFP that models entities as "signal functions" (SF) which consume some *event* and emit some *signal*.\footnotemark
+Functional Reactive Programming (FRP) offers a way to declaratively specify a system which behaves predictably.\cite{perez2017testing}
+    The approach of FRP offers an aspect of referential transparency\footnotemark but at a system level rather than just at the level of indiviual statements.
+    \footnotetext{
+        When a piece of logic is "Referentialy Transparent" it will produce the same outputs when given the same inputs.
+    }
+    Functional reactive programming is mostly done by composing "signal functions" (SF) which consume some *event* and emit some *signal*.\footnotemark
     \footnotetext{I'm adopting the nomenclature mapping *event* and *signal* to the input and output from Signal Functions - others may use the terms in different ways.}
-- [This abstraction will be used as a consistent approach to connecting the various components we need for an Interactive Artificial Intelligence.]
-- [The Functional Reactive Programming approach chosen builds on the advantages of PFP by specifying when inputs are collected, which inputs those are and what outputs are sent to the agent sends to the components.]
+    An agent written in FRP would "open" several "Foriegn Signal Functions" to communicate with external compoents bound to the system.
+    The program would combine these, along with geneal "utility" constructs into a sort of "outer" SF representing the initial state of the agent.
+    The program can then be started, collecting the specigies events (or non-events) from bindings, passing them into the "outer SF" and then forwarding any signals back out to the active components.
+To perform this work, we're developing an implementation of a sort of "shell" responsible for generating PFP code to interface between the agent and any components.
+    For deployment purposes; some method of "freezing" these interfaces will likely be used - the motivation for the code genration is to automate the step of "updating" something like this when a binding changes.
 
-- [The implementation will be built from a central "shell" responsible for generating PFP code to interface between the agent and any components.]
-    - [For deployment purposes; it's likely that some method of "freezing" these interfaces will be used - the motivation is automating the step of "updating" something like this when a binding changes.]
+% describe the isolation of bindings
 
-% describe isolation of bindings
+\subsection{Binding Components}
+
+It is assumed that components won't be written in FRP, and will need need some amount of adaptation to work with this system.
+Each component should have some amount of "glue" code to expose available functionality to the system - which we reffer to as the "binding."
+
+We've found that message types can be extracted from comppiled Scala classes using the JVM's runtime reflection.
+    [this lets us use the scala defintions as the master description of how the binging will interact with some checks at compile time]
+        [since these bindings will implement the connection between the components and the system; it made sense to start with the available functionality as the structure of the interface]
+        [could use something like a purpose built interface defintion language to generate the binding's types from a specification - this just seemed unesescary at the time]
+To pass data between components, and finally prepare the output - we used Scala's (for-yield, a) varation of "do-notation" to create a monad that can be invoked as needed to check for an event or receive a signal.
+    \footnotetext{
+        A very informal explanation of the Haskell do-notation syntax can be found here \url{http://learnyouahaskell.com/a-fistful-of-monads}.
+    }
+    Interestingly this allowed us to express parameters and dependencies between the components in a concise way.
+    Listing \ref{lst:depa} illustrates a contrived example of this mechanism.
+Each binding will be a singleton instantiated durring shell creation.
+    Each binding will be analysed (via reflection) to generate a functional "header" used to perform the actual invocations of functions on the instance.
+    Any functionality desired by the agent is accessed through a "Foriegn Signal Function" which acts as a sort of "handle" to the aforementioned monad.
+    When the shell wishes to start a new loop or "cycle" is will "solve" all of these Monads to create and plugin whatever data they need to work and input they wish to send into the agent's simulation.
+
+\begin{lstlisting}[caption={Scala for-yield to interact with the agent}, label={lst:depa},basicstyle=\small,language=Scala]
+
+def getTime = System.currentTimeMillis()
+
+// ////
+// illustration of sending a timestamp event
+
+  // record the start time lazily
+  lazy val start = getTime
+
+  // this "for loop" creates a sort of monadic query
+  for {
+    // when executed, this instance is created
+    // ... and returned for simplicity
+    time <- share(new TimeStamp(getTime - start))
+    
+    // previous line creates and shares a timeStamp
+
+  } yield {
+    // this line just returns the timeStamp event
+    time
+  }
+
+// ////
+// illustration of an event that needs the timestamp
+  for {
+    // this will wait for a timeStamp value
+    time <- request[TimeStamp]
+  } yield {
+    
+    // this event then returns an instance
+    new SomeOtherData(comeComputation(time.age))
+  }
+
+// ////
+// a signal handler that needs the timestamp
+  for {
+    // this will request the timestamp
+    // ... after the agent has executed
+    time <- request[TimeStamp]
+  } yield {
+    
+    // the lambda consumes an instance of SignalValue
+    (some: SignalValue) =>
+      ??? // perform some handling of the signal
+  }
+
+\end{lstlisting}
 
 
-[components aren't written in FRP, write a binding to expose their functionality as FRP]
-    [some "glue" would be required in any system]
-    [these "glue" can be isolated from eachother]
-        [a component in my solution exposes an API that the agent works against]
-        [similar components could depend upon shared types and expose identical APIs to allow interchange]
-        [components copuld also offer simmilar interfaces to allow adaptation]
 
+\subsection{describe scenarios}
 
-- [Components are bound using some amount of "glue" code to isolate them from each other; limiting the implementation to *just* focus on one aspect at a time.]
-
-
-do/show code of
-
-% describe scenarios
-
-[only agent is written in PFP]
+[only the agent is written in PFP]
     [Pareto Principle; 20\% of the population will control 80\% of the wealth]
-        % i'm taking it as a given that the agents will have the bugs
+        % I'm taking it as a given that the agents will have the bugs
     [???]
-    [hopefully the parts we're used to changing are the culprits]
+    [hopefully, the parts we're used to changing are the culprits]
 
-- [The agents themselves will be written in perfectly normal Idris\footnote{... or PureScript, I'm trying to migrate the agent lagnuage for technical reasons.} and compiled to a `.js` blob which can be loaded into the Java11/GraalVM's interpreter.]
+- [The agents themselves will be written in perfectly normal Idris\footnote{... or PureScript, I'm trying to migrate the agent language for technical reasons.} and compiled to a `.js` blob which can be loaded into the Java11/GraalVM's interpreter.]
     - [The use of the two "Java" platforms tends to mislead people - the goal isn't to develop a new way to run JavaScript, and the Java Virtual Machine was chosen due to the build tools making testing simple.]
 
 
-% describe execution
+\subsection{describe execution}
 
 [pass data back/forth in strict cycles]
     [mostly because we can, but, also makes life simpler]
@@ -67,7 +126,7 @@ do/show code of
     [this should limit the amount of "stuff" that can go wrong ... right]
         [drivers can still ignore errors - but now the error is in one known place]
     [each driver components can/is isolated; making their lives easier]
-[needs can be detected - limit IO between agent and shell to juist these cycles]
+[needs can be detected - limit IO between agent and shell to just these cycles]
     [opening an io is "only allowed at the start" as it has a "side effect"]
     [smaller input pairs for the scenarios]
         [actually - a driver's IO can be recorded and replayed on its own]
@@ -79,10 +138,10 @@ do/show code of
 
 
 
-% detail why this solves the problem
+\subsection{detail why this solves the problem}
 
 - [The approach here isn't focussed on building "master APIs" for the lines of communication between components, but, rather a system to automatically generate and check the interconnections between those components.]
-	- [The intent is to support flexible working; incompatible interface changes should cause type errors, and aberrant states can be reproduced and analysed.]
+    - [The intent is to support flexible working; incompatible interface changes should cause type errors, and aberrant states can be reproduced and analysed.]
 - [Agents Scenarios are not reliant upon an external encoding or communications system, nor can they easily buildup state that'll introduce aberrant behaviour - they stay "fresh" in a "just turned on" state.]
 
 - [The shell we propose enforces consistent input and output operations from the agent.]
@@ -97,4 +156,4 @@ do/show code of
     - [Again; due to Turning Completeness - any system could do this with enough work, but, this approach "supports" it.]
 
 - [Prior work has shown both that FRP approaches are quite suited to testing\cite{perez2017testing} and that automated testing of PFP itself can be quite useful in determining "edge cases"\cite{claessen2011quickcheck} which would otherwise be a challenge to diagnose.]
-	- [The ability to abstract and encode all invocations coming in and out of the system as distinct data points are key to this.]
+    - [The ability to abstract and encode all invocations coming in and out of the system as distinct data points are key to this.]

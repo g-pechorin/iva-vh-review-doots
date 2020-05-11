@@ -1,23 +1,33 @@
 
+\section{Conclusion and Further Work}
 
+In this paper, we have shown a concise approach to constructing a modular framework for building Virtual Humans or Interactive AI.
+The approach here isn't focused on building "master APIs" or generic utility components for the construction of these systems, but, rather a system to automatically generate and check the interconnections between those components.
+  The intent is to support flexible working; incompatible interface changes should cause type errors, and aberrant states can be reproduced and analysed.
+  The use of functional programming techniques allows us to make assumptions about the stability of the constructs without needing to manually audit modules for inconsistencies.
+Agent's Scenarios are not reliant upon an external encoding or communications system, nor can they easily buildup state that will introduce aberrant behaviour - they stay "fresh" in a "just turned on" state.
 
+The shell we propose enforces consistent input and output operations from the agent.
+  If the agent fails to specify or read a value for something there will be an immediate error; enforcing consistent behaviour.
+These aspects are currently "enforced" by our implementation, prior work has identified a method to enforce it as a compile-time constraint.\cite{winograd2012wormholes}
 
-\subsection{detail why this solves the problem}
+Additionally the strict delineations between "agent" and "shell" afford additional options for testing and diagnosis.
+  A "built-in" strict separation isn't required for "good" testing, but, it's helpful and considered a good practice anyway.
+The proposed component integration decouples them from the simulation - making "headless running" of the bound components "practical" compared to a more "tight" integration.
+  Nothing stops component developers from doing this on their own, but, this enforces a consistent structure so that one might be able to test them similarly.
+Finally, as noted elsewhere, abstracting the FFI into and out of the agent as streams of data means that the agent (or components) can be tested against previous sessions, and, re-played to re-reach a previous state.
+  Again; due to Turning Completeness - any system could do this with enough work, but, this approach "supports" it.
 
-- [The approach here isn't focussed on building "master APIs" for the lines of communication between components, but, rather a system to automatically generate and check the interconnections between those components.]
-    - [The intent is to support flexible working; incompatible interface changes should cause type errors, and aberrant states can be reproduced and analysed.]
-- [Agents Scenarios are not reliant upon an external encoding or communications system, nor can they easily buildup state that'll introduce aberrant behaviour - they stay "fresh" in a "just turned on" state.]
+Prior work has shown both that FRP approaches are quite suited to testing\cite{perez2017testing} and that automated testing of PFP itself can be quite useful in determining "edge cases"\cite{claessen2011quickcheck} which would otherwise be a challenge to diagnose.
+  The ability to abstract and encode all invocations coming in and out of the system as distinct data points are key to this.
 
-- [The shell we propose enforces consistent input and output operations from the agent.]
-    - [If the agent fails to specify or read a value for something there will be an immediate error; enforcing consistent behaviour.]
-- [These aspects are currently "enforced" by our implementation, prior work has identified a method to enforce it as a compile-time constraint.\cite{winograd2012wormholes}]
-
-- [Additionally the strict delineations between "agent" and "shell" afford additional options for testing and diagnosis.]
-    - [A "built-in" strict separation isn't required for "good" testing, but, it's helpful and considered a good practice anyway.]
-- [The proposed component integration decouples them from the simulation - making "headless running" of the bound components "practical" compared to a more "tight" integration.]
-    - [Nothing stops component developers from doing this on their own, but, this enforces a consistent structure so that one might be able to test them similarly.]
-- [Finally, as noted elsewhere, abstracting the FFI into and out of the agent as streams of data means that the agent (or components) can be tested against previous sessions, and, re-played to re-reach a previous state.]
-    - [Again; due to Turning Completeness - any system could do this with enough work, but, this approach "supports" it.]
-
-- [Prior work has shown both that FRP approaches are quite suited to testing\cite{perez2017testing} and that automated testing of PFP itself can be quite useful in determining "edge cases"\cite{claessen2011quickcheck} which would otherwise be a challenge to diagnose.]
-    - [The ability to abstract and encode all invocations coming in and out of the system as distinct data points are key to this.]
+The concepts in this paper have been demonstrated in isolation, and work is ongoing to integrate and validate them.
+  Certain limitations need to be addressed; the most glaring is that the implementation suffers from an inevitable stack overflow error as the chosen ECMAScript engine cannot perform tail call elimination.
+    The way that the loops are implemented causes each iteration to push new stack-frame for the next cycle, from which the program will never return.
+    This is a well-understood problem in the functional programming community, but, was discovered late in the project.
+    The intended solution is a technique called "trampolining" which is being implemented for the next iteration of the system.
+  To assess the ease of use for this approach, we'd like to recruit participants to make use of the system in an informal setting.
+    This will likely involve liaising with researchers in our institution and providing them with a demonstration of the system's capabilities before tasking them with producing some artefact that builds on that.
+    Following such a session - we'd like to conduct an exit interview and see if aspects should be highlighted or dismissed.
+  Finally, the ability to record and replay or even resume sessions continues to capture the attention of peers whom we've discussed the system with.
+    Providing tools to simplify this task, or even automate performing and analysing the results of it would be desirable.

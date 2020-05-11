@@ -105,19 +105,28 @@ def getTime = System.currentTimeMillis()
 
 
 
-\subsection{Agent Scenario}
+\subsection{Agent Scenarios}
 
-[only the agent is written in PFP]
-    [Pareto Principle; 20\% of the population will control 80\% of the wealth]
-        % I'm taking it as a given that the agents will have the bugs
-    [???]
-    [hopefully, the parts we're used to changing are the culprits]
-
-- [The agents themselves will be written in perfectly normal Idris\footnote{... or PureScript, I'm trying to migrate the agent language for technical reasons.} and compiled to a `.js` blob which can be loaded into the Java11/GraalVM's interpreter.]
-    - [The use of the two "Java" platforms tends to mislead people - the goal isn't to develop a new way to run JavaScript, and the Java Virtual Machine was chosen due to the build tools making testing simple.]
+The "agents" themselves are pure functional programs written in a traditional pure functional programming language.
+    We're currently using Idris, but, working to switch to PureScript as its toolset looks more suitable in practice.
+Agents will be written against "headers" corresponding to bindings, these headers will define how the agent interacts with the IO from the shell and components.
+Once written, the agent is compiled to a `.js` program that can be loaded into the Java11/GraalJS interpreter.
+    There's no reason that another compatible interpreter or platforms couldn't be used; this was chosen for simplicity 
+When operating, the agent cannot open (or close) additional connections to components; this is intentional as it means missing resources can be detected on startup rather than during execution.
 
 
 \subsection{describe execution}
+
+
+
+
+The agent will "open" all Foreing Signal Functions required, and produce a single signal function instance representing its initial state.
+As the system exectues
+
+
+
+When the "shell" starts up, it will be given a list of components that should be available.
+
 
 [pass data back/forth in strict cycles]
     [mostly because we can, but, also makes life simpler]

@@ -110,59 +110,52 @@ def getTime = System.currentTimeMillis()
 The "agents" themselves are pure functional programs written in a traditional pure functional programming language.
     We're currently using Idris, but, working to switch to PureScript as its toolset looks more suitable in practice.
 Agents will be written against "headers" corresponding to bindings, these headers will define how the agent interacts with the IO from the shell and components.
-Once written, the agent is compiled to a `.js` program that can be loaded into the Java11/GraalJS interpreter.
+Once written, the agent is compiled to a \lstinline{.js} program that can be loaded into the Java11/GraalJS interpreter.
     There's no reason that another compatible interpreter or platforms couldn't be used; this was chosen for simplicity 
 When operating, the agent cannot open (or close) additional connections to components; this is intentional as it means missing resources can be detected on startup rather than during execution.
 
 
-\subsection{describe execution}
+\subsection{System Lifecycle}
 
 
+%    https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoiZ3JhcGggVERcblxuICAgIGdlbltnZW5lcmF0ZSBoZWFkZXJzXVxuICAgIG1ha2VbY29tcGlsZSBhZ2VudCB0byBgLmpzYF1cbiAgICBsb2FkW2xvYWQgYWdlbnQgaW50byBWTV1cbiAgICBleGVjdXRlW3J1biBgLmpzYCB0byBvcGVuIEZTRiBhbmQgZ2V0IGluaXRpYWwgYWdlbnQgc3RhdGVdXG4gICAgZXZlbnRbY29sbGVjdCBldmVudHMgZnJvbSBjb21wb25lbnRzXVxuICAgIHJlYWN0W2NvbnN1bWUgZXZlbnRzIGFuZCBjb21wdXRlIHNpZ25hbHNdXG4gICAgc2lnbmFsW2ZvcndhcmQgc2lnbmFscyBiYWNrIHRvIGNvbXBvbmVudHNdXG5cbiAgICBzdWJncmFwaCBidWlsZFxuICAgICAgICBnZW4tLT5tYWtlXG4gICAgZW5kXG5cbiAgICBzdWJncmFwaCBleGVjdXRpb25cbiAgICAgICAgZXZlbnQtLT4gcmVhY3RcbiAgICAgICAgcmVhY3QgLS0-IHNpZ25hbFxuICAgICAgICBzaWduYWwgLS0-IGV2ZW50XG4gICAgZW5kXG5cbiAgICBtYWtlIC0tPiBsb2FkXG5cbiAgICBzdWJncmFwaCBsYXVuY2hcbiAgICAgICAgbG9hZCAtLT4gZXhlY3V0ZVxuICAgIGVuZFxuXG4gICAgZXhlY3V0ZSAtLT4gZXZlbnRcbiAgICBcbiAgICBcbiAgICBcblxuXHRcdFx0XHRcdCIsIm1lcm1haWQiOnsidGhlbWUiOiJkZWZhdWx0In0sInVwZGF0ZUVkaXRvciI6ZmFsc2V9
 
 
-The agent will "open" all Foreing Signal Functions required, and produce a single signal function instance representing its initial state.
-As the system exectues
+\begin{figure}
+  \caption{Proposed Lifecycle}
+  \includegraphics[keepaspectratio, width=8cm]{content/execution}
+  \label{fig:execution}
+\end{figure}
 
 
+Figure \ref{fig:execution} illustrates the proposed lifecycle of the system described here - omitting details that should be obvious to the reader.
+    \footnote{
+        Such as the instantiation of bindings, their threads and network connections, the creation of an ECMAScript engine, etc.
+    }
+    The startup creates and updates any headers to ensure that the agent is operating against an up to date version of the bindings.
+        If the available components have changed (since the agent was written) - this will produce an immediate error on startup, rather than at a later date.
+    The compiled \lstinline{.js} is executed which connects to all components and composes the initial state of the system.
+    Fro that point on, the system enters an (intentionally) infinite loop where it collects events from components, "executes" the agent to consume those events, and forwards signals from the cycle back out to components as needed.
 
-When the "shell" starts up, it will be given a list of components that should be available.
+Data is passed in and out of the agent in strict cycles.
+    This allows a measure of safety and checking.
+    Each Foreign Signal Function (FSF) is expected to be invoked once and only once during each cycle.
+    The agent's outputs are considered "stateless" so \textit{could} be executed multiple times with only the last value being relevant - however this \textit{feels} wrong.
+    The agent's inputs are dependent on what was passed in from the components, so the meaning of "missing" a value or reading it multiple times is unclear; should the value be re-read, queued.
+    We take a strict stance that the simulation, just like the bindings, must behave reliably when running.
 
+On launch, the agent is required to "open" each input that it wishes to read from and each output it will provide.
+    This is enforced by binding the "creation" function to the IO Monad and removing the foreign calls from the ECMAScript namespace once this step has been completed.
+    If the compiled agent program is reliant upon something like a stale header; this will cause an immediate error since the corresponding ECMAScript functionality won't be defined.
 
-[pass data back/forth in strict cycles]
-    [mostly because we can, but, also makes life simpler]
-    [strict rules are placed on how the bindings can act and react]
-        [one in one out]
-    [this should limit the amount of "stuff" that can go wrong ... right]
-        [drivers can still ignore errors - but now the error is in one known place]
-    [each driver components can/is isolated; making their lives easier]
-[needs can be detected - limit IO between agent and shell to just these cycles]
-    [opening an io is "only allowed at the start" as it has a "side effect"]
-    [smaller input pairs for the scenarios]
-        [actually - a driver's IO can be recorded and replayed on its own]
-    [nothing to prevent re-running events and testing scenarios]
-    [nothing to prevent re-running events and testing component]
+The design isn't firmly tied to any of the tools used to build it.
+    Easily embeddable ECMAScript engines\footnote{The library DukTape is deisgned for this type of use. \url{https://duktape.org/}} combined with tools to manipulate\footnote{Thge tool "Babel.JS" can "downgrade" newer JavaScript proframs for older interpreters. \url{https://babeljs.io/}} the compiled \lstinline{.js} would allow the approach to be used on other platforms.
+        % Some convention would need to be established to replace the event collection, but, that hardly seems like a barrier.
+    The goal of this approach is to automate checking that ensues the framework, the AI, and the components are all operating in a manner that's easy to coordinate.
 
-    - [On launch, the agent must "open" each input that it wishes to read from and each output it will provide.]
-        - [If the available components have changed (since the agent was written) - this will produce an immediate error on startup, rather than at a later date.]
-
-
-
-\subsection{detail why this solves the problem}
-
-- [The approach here isn't focussed on building "master APIs" for the lines of communication between components, but, rather a system to automatically generate and check the interconnections between those components.]
-    - [The intent is to support flexible working; incompatible interface changes should cause type errors, and aberrant states can be reproduced and analysed.]
-- [Agents Scenarios are not reliant upon an external encoding or communications system, nor can they easily buildup state that'll introduce aberrant behaviour - they stay "fresh" in a "just turned on" state.]
-
-- [The shell we propose enforces consistent input and output operations from the agent.]
-    - [If the agent fails to specify or read a value for something there will be an immediate error; enforcing consistent behaviour.]
-- [These aspects are currently "enforced" by our implementation, prior work has identified a method to enforce it as a compile-time constraint.\cite{winograd2012wormholes}]
-
-- [Additionally the strict delineations between "agent" and "shell" afford additional options for testing and diagnosis.]
-    - [A "built-in" strict separation isn't required for "good" testing, but, it's helpful and considered a good practice anyway.]
-- [The proposed component integration decouples them from the simulation - making "headless running" of the bound components "practical" compared to a more "tight" integration.]
-    - [Nothing stops component developers from doing this on their own, but, this enforces a consistent structure so that one might be able to test them similarly.]
-- [Finally, as noted elsewhere, abstracting the FFI into and out of the agent as streams of data means that the agent (or components) can be tested against previous sessions, and, re-played to re-reach a previous state.]
-    - [Again; due to Turning Completeness - any system could do this with enough work, but, this approach "supports" it.]
-
-- [Prior work has shown both that FRP approaches are quite suited to testing\cite{perez2017testing} and that automated testing of PFP itself can be quite useful in determining "edge cases"\cite{claessen2011quickcheck} which would otherwise be a challenge to diagnose.]
-    - [The ability to abstract and encode all invocations coming in and out of the system as distinct data points are key to this.]
+% [needs can be detected - limit IO between agent and shell to just these cycles]
+%     [opening an io is "only allowed at the start" as it has a "side effect"]
+%     [smaller input pairs for the scenarios]
+%         [actually - a driver's IO can be recorded and replayed on its own]
+%     [nothing to prevent re-running events and testing scenarios]
+%     [nothing to prevent re-running events and testing component]

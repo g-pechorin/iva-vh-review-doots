@@ -39,10 +39,10 @@ To perform this work, we're developing an implementation of a sort of "shell" re
 It is assumed that components won't be written in FRP, and will need some amount of adaptation to work with this system.
 Each component should have some amount of "glue" code to expose available functionality to the system - which we refer to as the "binding."
 
-We've found that message types can be extracted from compiled Scala classes using the JVM's runtime reflection.
+We've found that message types can be extracted from compiled Scala classes using the JVM's run-time reflection.
     With this approach, the Scala definitions become the "master description" of how data will be passed in and out by the binding.
         Specifying these structures in the bindings, then generating the "headers" for the agent seemed like a logical method to carry out this step.
-        If relying on reflection is undesirable or otherwise inconvenient; one could use some manner of Interface Definition Language to generate "both sides" od the data structures from one master description.
+        If relying on reflection is undesirable or otherwise inconvenient; one could use some manner of Interface Definition Language to generate "both sides" of the data structures from one master description.
 To pass data between components, and finally prepare the output - we used Scala's (for-yield, a) variation of "do-notation" to create a monad that can be invoked as needed to check for an event or receive a signal.
     \footnotetext{
         A very informal explanation of the Haskell do-notation syntax can be found here \url{http://learnyouahaskell.com/a-fistful-of-monads}.
@@ -108,7 +108,7 @@ def getTime = System.currentTimeMillis()
 \subsection{Agent Scenarios}
 
 The "agents" themselves are pure functional programs written in a traditional pure functional programming language.
-    We're currently using Idris, but, working to switch to PureScript as its toolset looks more suitable in practice.
+    We're currently using Idris, but, working to switch to PureScript as its tool set looks more suitable in practice.
 Agents will be written against "headers" corresponding to bindings, these headers will define how the agent interacts with the IO from the shell and components.
 Once written, the agent is compiled to a \lstinline{.js} program that can be loaded into the Java11/GraalJS interpreter.
     There's no reason that another compatible interpreter or platforms couldn't be used; this was chosen for simplicity 
@@ -149,7 +149,7 @@ On launch, the agent is required to "open" each input that it wishes to read fro
     If the compiled agent program is reliant upon something like a stale header; this will cause an immediate error since the corresponding ECMAScript functionality won't be defined.
 
 The design isn't firmly tied to any of the tools used to build it.
-    Easily embeddable ECMAScript engines\footnote{The library DukTape is deisgned for this type of use. \url{https://duktape.org/}} combined with tools to manipulate\footnote{Thge tool "Babel.JS" can "downgrade" newer JavaScript proframs for older interpreters. \url{https://babeljs.io/}} the compiled \lstinline{.js} would allow the approach to be used on other platforms.
+    Easily embeddable ECMAScript engines\footnote{The library DukTape is designed for this type of use. \url{https://duktape.org/}} combined with tools to manipulate\footnote{The tool "Babel.JS" can "downgrade" newer JavaScript programs for older interpreters. \url{https://babeljs.io/}} the compiled \lstinline{.js} would allow the approach to be used on other platforms.
         % Some convention would need to be established to replace the event collection, but, that hardly seems like a barrier.
     The goal of this approach is to automate checking that ensues the framework, the AI, and the components are all operating in a manner that's easy to coordinate.
 

@@ -4,45 +4,45 @@
 
 \section{Proposed Approach}
 
-Implementing a full Interactive Artificial Intelligence (IAI) system with Pure Functional Programming (PFP) would be one, admitedly unfeasable approach to this.
+Implementing a full Interactive Artificial Intelligence (IAI) system with Pure Functional Programming (PFP) would be one, admittedly unfeasible approach to this.
     Simply writing the system in a PFP method wouldn't prevent the issues identified from being present. 
-        In effect, this approach would be trusting that the same mistakes won't be made again, and, that the development team will be able to track all deatils of their work correctly this time.
-    While the concept of Turing Completeness\footnotemark would argue that it's possible to do what we describe in any language, our argument is that with a PFP the task is simpler to finish as the implementation is checked by the language to an extent that it wouldn't be in an impoure lagnuage.
+        In effect, this approach would be trusting that the same mistakes won't be made again, and, that the development team will be able to track all details of their work correctly this time.
+    While the concept of Turing Completeness\footnotemark would argue that it's possible to do what we describe in any language, we argue that with a PFP the task is simpler to finish as the implementation is checked by the language to an extent that it wouldn't be in an impure language.
     \footnotetext{
-        "Turing-Completeness" here reffers to the notion that any program expressed in a "Turing-Complete" language can be mechanically translated or emulated in any other Turing-Complete language.
+        "Turing-Completeness" here refers to the notion that any program expressed in a "Turing-Complete" language can be mechanically translated or emulated in any other Turing-Complete language.
     }
     Functional Purity allows us to reuse logic without the need to consider unseen side effects, and our goal is to use an approach that is, as described in\cite{perez2017testing} "functional purity at the system level."
 
 In 2002 Gratch and others identified the need to develop reusable tools and modular architectures for the development of IAI.\cite{gratch_creating_2002}
 They also identified that consistency and timing between separate modules as an issue that needs to be managed.
-    While we cannot "enforce" handling of either of these, our appraoch should assist in handling concerns involved.
-        We can't force a compoent to attach the same timestamps that we do, but, we can provide a sort fo "marhsalling area" where the data from the compoent (including timestamps) is processed and passed into the system.
-    By explicit handling how the data is "marshalled" before being passed into the simulation, or along to other bindings, we hope to make the process more concistent.
+    While we cannot "enforce" handling of either of these, our approach should assist in handling concerns involved.
+        We can't force a component to attach the same timestamps that we do, but, we can provide a sort fo "marshalling area" where the data from the component (including timestamps) is processed and passed into the system.
+    By explicit handling how the data is "marshalled" before being passed into the simulation, or along to other bindings, we hope to make the process more consistent.
 
 Functional Reactive Programming (FRP) offers a way to declaratively specify a system which behaves predictably.\cite{perez2017testing}
-    The approach of FRP offers an aspect of referential transparency\footnotemark but at a system level rather than just at the level of indiviual statements.
+    The approach of FRP offers an aspect of referential transparency\footnotemark but at a system level rather than just at the level of individual statements.
     \footnotetext{
         When a piece of logic is "Referentialy Transparent" it will produce the same outputs when given the same inputs.
     }
     Functional reactive programming is mostly done by composing "signal functions" (SF) which consume some *event* and emit some *signal*.\footnotemark
     \footnotetext{I'm adopting the nomenclature mapping *event* and *signal* to the input and output from Signal Functions - others may use the terms in different ways.}
-    An agent written in FRP would "open" several "Foriegn Signal Functions" to communicate with external compoents bound to the system.
-    The program would combine these, along with geneal "utility" constructs into a sort of "outer" SF representing the initial state of the agent.
-    The program can then be started, collecting the specigies events (or non-events) from bindings, passing them into the "outer SF" and then forwarding any signals back out to the active components.
+    An agent written in FRP would "open" several "Foreign Signal Functions" to communicate with external components bound to the system.
+    The program would combine these, along with general "utility" constructs into a sort of "outer" SF representing the initial state of the agent.
+    The program can then be started, collecting the specifies events (or non-events) from bindings, passing them into the "outer SF" and then forwarding any signals back out to the active components.
 To perform this work, we're developing an implementation of a sort of "shell" responsible for generating PFP code to interface between the agent and any components.
-    For deployment purposes; some method of "freezing" these interfaces will likely be used - the motivation for the code genration is to automate the step of "updating" something like this when a binding changes.
+    For deployment purposes; some method of "freezing" these interfaces will likely be used - the motivation for the code generation is to automate the step of "updating" something like this when a binding changes.
 
 % describe the isolation of bindings
 
 \subsection{Binding Components}
 
-It is assumed that components won't be written in FRP, and will need need some amount of adaptation to work with this system.
-Each component should have some amount of "glue" code to expose available functionality to the system - which we reffer to as the "binding."
+It is assumed that components won't be written in FRP, and will need some amount of adaptation to work with this system.
+Each component should have some amount of "glue" code to expose available functionality to the system - which we refer to as the "binding."
 
-We've found that message types can be extracted from comppiled Scala classes using the JVM's runtime reflection.
-    [this lets us use the scala defintions as the master description of how the binging will interact with some checks at compile time]
-        [since these bindings will implement the connection between the components and the system; it made sense to start with the available functionality as the structure of the interface]
-        [could use something like a purpose built interface defintion language to generate the binding's types from a specification - this just seemed unesescary at the time]
+We've found that message types can be extracted from compiled Scala classes using the JVM's runtime reflection.
+    With this approach, the Scala defintions become the "master description" of how data will be passed in and out by the binding.
+        Specifying these structures in the bindings, then generating the "headers" for the agent seemed like logical method to carry out this step.
+        If relying on reflection is undesireable or otherwise incvonvient; one could use some manner of Interface Defintion Language to generate "both sides" od the data structures from one master description.
 To pass data between components, and finally prepare the output - we used Scala's (for-yield, a) varation of "do-notation" to create a monad that can be invoked as needed to check for an event or receive a signal.
     \footnotetext{
         A very informal explanation of the Haskell do-notation syntax can be found here \url{http://learnyouahaskell.com/a-fistful-of-monads}.
@@ -105,7 +105,7 @@ def getTime = System.currentTimeMillis()
 
 
 
-\subsection{describe scenarios}
+\subsection{Agent Scenario}
 
 [only the agent is written in PFP]
     [Pareto Principle; 20\% of the population will control 80\% of the wealth]
